@@ -16,7 +16,7 @@ def entry(request, title):
         return render(request, "encyclopedia/entry.html", {
             "title": title,
             #TODO sends html in plaintext and ignores markups
-            "entry": htmlEntry
+            "entry": markdown2.markdown(entry)
         })
     return render(request, "encyclopedia/notfound.html", {
         "title": title
