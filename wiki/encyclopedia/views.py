@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import markdown2
 
 from . import util
 
@@ -8,10 +9,15 @@ def index(request):
         "entries": util.list_entries()
     })
 
-def page(request, title):
+def entry(request, title):
     entry = util.get_entry(title)
     if entry != None:
-        return 1
+        htmlEntry = markdown2.markdown(entry)
+        return render(request, "encyclopedia/entry.html", {
+            "title": title,
+            #TODO sends html in plaintext and ignores markups
+            "entry": htmlEntry
+        })
     return render(request, "encyclopedia/notfound.html", {
         "title": title
     })
