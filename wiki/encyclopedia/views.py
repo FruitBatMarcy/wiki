@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django import forms
+import random
 import markdown2
 
 
@@ -8,6 +9,9 @@ from . import util
 
 class NewEntryForm(forms.Form):
     title = forms.CharField(label="title")
+    content = forms.CharField(label="content", widget=forms.Textarea)
+
+class EditForm(forms.Form):
     content = forms.CharField(label="content", widget=forms.Textarea)
 
 def index(request):
@@ -22,7 +26,6 @@ def entry(request, title):
         
         return render(request, "encyclopedia/entry.html", {
             "title": title,
-            #TODO sends html in plaintext and ignores markups
             "entry": htmlEntry
         })
     return render(request, "encyclopedia/notfound.html", {
@@ -54,8 +57,18 @@ def newentry(request):
                    "form": form
                 })
             util.save_entry(entryTitle,entryContent)
-            HttpResponseRedirect(entryTitle)
+            return HttpResponseRedirect(entryTitle)
 
     return render(request, "encyclopedia/newentry.html",{
         "form": NewEntryForm()
     })
+
+def randomEntry(request):
+    entryList = util.list_entries()
+    title = entryList[int((len(entryList)*random.random()))]
+    entry = util.get_entry(title)
+    htmlEntry = markdown2.markdown(entry)
+    return render(request, "encyclopedia/entry.html", {
+            "title": title,
+            "entry": htmlEntry
+        })
