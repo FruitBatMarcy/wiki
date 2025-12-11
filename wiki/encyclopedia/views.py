@@ -31,7 +31,8 @@ def entry(request, title):
         "title": title
     })
 
-def search(request, search):
+def search(request):
+    search = request.GET.__getitem__("q")
     entries = util.list_entries()
     sItems = []
     for entry in entries:
