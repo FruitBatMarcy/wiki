@@ -6,8 +6,9 @@ import markdown2
 
 from . import util
 
-class SearchForm(forms.Form):
-    task = forms.CharField(label="Search")
+class NewEntryForm(forms.Form):
+    title = forms.CharField(label="title")
+    content = forms.CharField(label="content", widget=forms.Textarea)
 
 def index(request):
     return render(request, "encyclopedia/index.html", {
@@ -15,9 +16,6 @@ def index(request):
     })
 
 def entry(request, title):
-    if request.method == "POST":
-        title = request.POST
-
     entry = util.get_entry(title)
     if entry != None:
         htmlEntry = markdown2.markdown(entry)
@@ -36,12 +34,28 @@ def search(request):
     entries = util.list_entries()
     sItems = []
     for entry in entries:
-        if entry == search:
-            return HttpResponseRedirect("../" + search)
+        if entry.lower() == search.lower():
+            return HttpResponseRedirect(search)
         if entry.lower().__contains__(search.lower()):
             sItems.append(entry)
     return render(request, "encyclopedia/results.html", {
         "entries": sItems
     })
     
+def newentry(request):
+    if request.method == "POST":
+        form = NewEntryForm(request.POST)
+        if form.is_valid():
+            entryTitle = form.cleaned_data["title"]
+            entryContent = form.cleaned_data["content"]
+            if util.list_entries().__contains__(entryTitle):
+                form.add_error("title", "Entry Already Exists")
+                return render(request, "encyclopedia/newentry.html",{
+                   "form": form
+                })
+            util.save_entry(entryTitle,entryContent)
+            HttpResponseRedirect(entryTitle)
 
+    return render(request, "encyclopedia/newentry.html",{
+        "form": NewEntryForm()
+    })
