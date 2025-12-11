@@ -1,9 +1,13 @@
 from django.shortcuts import render
-import html
+from django.http import HttpResponseRedirect, HttpResponse
+from django import forms
 import markdown2
+
 
 from . import util
 
+class SearchForm(forms.Form):
+    task = forms.CharField(label="Search")
 
 def index(request):
     return render(request, "encyclopedia/index.html", {
@@ -11,6 +15,9 @@ def index(request):
     })
 
 def entry(request, title):
+    if request.method == "POST":
+        title = request.POST
+
     entry = util.get_entry(title)
     if entry != None:
         htmlEntry = markdown2.markdown(entry)
@@ -23,3 +30,17 @@ def entry(request, title):
     return render(request, "encyclopedia/notfound.html", {
         "title": title
     })
+
+def search(request, search):
+    entries = util.list_entries()
+    sItems = []
+    for entry in entries:
+        if entry == search:
+            return HttpResponseRedirect("../" + search)
+        if entry.lower().__contains__(search.lower()):
+            sItems.append(entry)
+    return render(request, "encyclopedia/results.html", {
+        "entries": sItems
+    })
+    
+
