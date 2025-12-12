@@ -4,7 +4,7 @@ from django import forms
 import random
 import markdown2
 
-
+from . import views
 from . import util
 
 class NewEntryForm(forms.Form):
@@ -30,6 +30,21 @@ def entry(request, title):
         })
     return render(request, "encyclopedia/notfound.html", {
         "title": title
+    })
+
+def edit(request, title):
+    if request.method == "POST":
+        form = EditForm(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data["content"]
+            util.save_entry(title, content)
+            return HttpResponseRedirect(f"../{title}")
+
+    mkdownCont = util.get_entry(title)
+    content = EditForm(initial={"content": mkdownCont})
+    return render(request, "encyclopedia/edit.html",{
+        "title": title,
+        "form":content
     })
 
 def search(request):
@@ -68,7 +83,8 @@ def randomEntry(request):
     title = entryList[int((len(entryList)*random.random()))]
     entry = util.get_entry(title)
     htmlEntry = markdown2.markdown(entry)
-    return render(request, "encyclopedia/entry.html", {
-            "title": title,
-            "entry": htmlEntry
-        })
+    return views.entry(request, title)
+    # return render(request, "encyclopedia/entry.html", {
+    #        "title": title,
+    #        "entry": htmlEntry
+    #    })
